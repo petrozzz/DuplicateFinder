@@ -1,6 +1,7 @@
 #ifndef PATHDISCOBJECT_H
 #define PATHDISCOBJECT_H
 #include "discobject.h"
+#include "filediscobject.h"
 #include <string>
 #include <list>
 
@@ -13,11 +14,11 @@ public:
 public:
     PathDiscObject();
     PathDiscObject(string root, string name);
-    virtual DiscObjectType get_type() override;
+    DiscObjectType get_type();
 
     ~PathDiscObject(){
         discobjects.clear();
-    };
+    }
 
 public:
     std::list<DiscObject> getDiscObjects() const{
@@ -25,6 +26,8 @@ public:
     }
 
     void calcDiscObject();
+
+    void PathDiscObject::getAllFiles(std::list<FileDiscObject> &all_files);
 };
 
 #endif // PATHDISCOBJECT_H

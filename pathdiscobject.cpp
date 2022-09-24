@@ -1,12 +1,11 @@
 #include "pathdiscobject.h"
 #include "filediscobject.h"
 #include <iostream>
-#include <sys/types.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <cstring>
+
+#include <QDir>
+#include <QDirIterator>
+#include <QFile>
+#include <QFileInfo>
 #include <QDebug>
 
 using namespace std;
@@ -15,7 +14,6 @@ PathDiscObject::PathDiscObject(){
 }
 
 PathDiscObject::PathDiscObject(std::string root, std::string name):DiscObject(root, name){
-    //qDebug() << (getRoot() + "/" + getName()).data();
     calcDiscObject();
 }
 
@@ -23,46 +21,38 @@ DiscObjectType PathDiscObject::get_type(){
     return DiscObjectType::PathObject;
 }
 
-void PathDiscObject::calcDiscObject(){
-    DIR *path = NULL;
-    qDebug() << (this->getRoot() + this->getName()).data();
-    path = opendir((this->getRoot() + this->getName()).data());
-    if(path == 0x0)
-        return;
-    //qDebug() << (getRoot() + "/" + getName()).data();
-    struct dirent *dir_entry;
-    struct stat file_info;
-    //int iter = 0;
-    while((dir_entry = readdir(path))!= NULL){
-        //printf(" %s", dir_entry->d_name);       
-        qDebug() << (this->getRoot() + this->getName() + "/"+ (string)(dir_entry->d_name)).data();
-        stat((this->getRoot() + this->getName() + "/"+ (string)(dir_entry->d_name)).data() , &file_info);
-        switch(file_info.st_mode & S_IFMT){
-        case S_IFBLK:
-            //printf("\t - block device\n");
-            break;
-        case S_IFCHR:
-            //printf("\t - carecter device\n");
-            break;
-        case S_IFDIR:
-            //printf("\t - directory\n");
-            if((strcmp(dir_entry->d_name, "..")!=0) && (strcmp(dir_entry->d_name, "."))!=0){
-                discobjects.push_back((DiscObject)(PathDiscObject(this->getRoot()+this->getName()+"/",dir_entry->d_name)));
-                (discobjects.back()).do_type = "Dir";
-            }
-            break;
-        case S_IFSOCK:
-            //printf("\t - socket\n");
-            break;
-        case S_IFREG:
-            discobjects.push_back((DiscObject)(FileDiscObject(this->getName(),dir_entry->d_name)));
-            (discobjects.back()).do_type = "File";
-            //printf("\t - regular file\n");
-            break;
-        default:
-            printf("\t - unknown\n");
-        }
+void PathDiscObject::calcDiscObject()
+{
+    QString dirPath = (this->getRoot() + this->getName()).data();
+    //QStringList fileNameFilters;
+    //fileNameFilters.clear();
+    //fileNameFilters.push_back("*.*");
+    QStringList fileNameList;
+    fileNameList << QDir(dirPath).entryList(/*fileNameFilters, */QDir::Files | QDir::Hidden);
+    QFileInfo fileInfo;
+    foreach (const QString& fileName, fileNameList)    {
+        discobjects.push_back((DiscObject)(FileDiscObject(dirPath.toStdString(),fileName.toStdString())));
+        (discobjects.back()).do_type = "File";
     }
-    closedir(path);
+    QStringList subDirNameList;
+    subDirNameList << QDir(dirPath).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    foreach (const QString& subDirName, subDirNameList)    {
+        QString fullPath = dirPath + QDir::separator() + subDirName;
+        discobjects.push_back((DiscObject)(PathDiscObject(dirPath.toStdString()+"/",subDirName.toStdString())));
+        (discobjects.back()).do_type = "Dir";
+    }
+}
 
+void PathDiscObject::getAllFiles(std::list<FileDiscObject> &all_files){
+
+    auto it = discobjects.begin();
+    while(it != discobjects.end()){
+        if((*it).do_type.compare("Dir") == 0){
+            PathDiscObject dobj((*it).getRoot(), (*it).getName());
+            dobj.getAllFiles(all_files);
+        } else {
+            all_files.push_back(FileDiscObject((*it).getRoot(), (*it).getName()));
+        }
+        it++;
+    }    
 }

@@ -2,6 +2,10 @@
 #define ABSTARCTDISCOBJECT_H
 
 #include <string>
+#include <QFileInfo>
+#include <QDir>
+#include <QDateTime>
+
 
 using std::string;
 
@@ -13,6 +17,9 @@ protected:
     string root; // PathDiscObject* root; - так можно???
     string name;
     string create_time;
+    string modified_time;
+    long long size;
+    string group;
 
 public:
 
@@ -20,13 +27,30 @@ public:
 
     DiscObject();
     DiscObject(string root, string name);
-    string getRoot();
-    string getName();
-    string getCreateTime();
-    virtual DiscObjectType get_type(){};
+    string getRoot() const{
+        return root;
+    }
+    string getName() const{
+        return name;
+    }
+    long long getSize() const{
+        return size;
+    }
+    string getGroup() const{
+        return group;
+    }
+    string getCreateTime() const{
+        return create_time;
+    }
+    string getModifiedTime() const{
+        return modified_time;
+    }
+    DiscObjectType get_type() {
+        //do virtual
+    }
 
-protected:
-    void init();
+protected:   
+    string getHash();
 
 };
 

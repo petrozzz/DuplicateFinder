@@ -5,14 +5,14 @@
 #include "discobject.h"
 #include "filediscobject.h"
 #include "pathdiscobject.h"
-
+/*
 #include <iostream>
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdlib.h>
-
+*/
 #include <string>
 #include <vector>
 
@@ -28,7 +28,7 @@ public:
     DBDiscObject(PathDiscObject path);
 
 private:
-    void getDiscObject(PathDiscObject path);
+
 };
 
 #endif // DBDISCOBJECT_H
